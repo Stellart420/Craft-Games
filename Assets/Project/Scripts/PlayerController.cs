@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
     public static PlayerController Instance;
 
     bool isStarted => GameController.Instance.IsStarted;
-    [SerializeField] float currentSpeed;
+    [SerializeField] float speed = 6f;
     bool isGoingRight = true;
     bool isAlive = true;
 
@@ -27,6 +27,7 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
+        GameController.Instance.RestartAction += Reset;
         rigidbody = GetComponent<Rigidbody>();
         startPos = transform.position;
     }
@@ -57,11 +58,11 @@ public class PlayerController : MonoBehaviour
     {
         if (isGoingRight)
         {
-            rigidbody.velocity = (Vector3.right * currentSpeed) + Physics.gravity;
+            rigidbody.velocity = (Vector3.right * speed) + Physics.gravity;
         }
         else
         {
-            rigidbody.velocity = (Vector3.forward * currentSpeed) + Physics.gravity;
+            rigidbody.velocity = (Vector3.forward * speed) + Physics.gravity;
         }
 
     }

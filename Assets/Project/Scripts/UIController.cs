@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class UIController : MonoBehaviour
 {
@@ -9,6 +11,9 @@ public class UIController : MonoBehaviour
     [SerializeField] StartingScreen startingScreen;
     [SerializeField] GameScreen gameScreen;
     [SerializeField] GameOverScreen gameOverScreen;
+
+    public UnityAction<int> ChangeScoreAction;
+
     void Awake()
     {
         if (Instance)
@@ -20,9 +25,10 @@ public class UIController : MonoBehaviour
 
     }
 
-    private void Start()
+    public int SetScore(int _score)
     {
-        
+        ChangeScoreAction(_score);
+        return _score;
     }
 
     public void StartGame()

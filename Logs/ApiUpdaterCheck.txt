@@ -48,3 +48,43 @@ C# parse time         : 361ms
 candidates check time : 71ms
 console write time    : 2ms
 
+[api-updater (non-obsolete-error-filter)] 31.01.2022 16:08:06 : Starting C:/Stellar/Programs/Unity/Editors/2020.3.26f1/Editor/Data/Tools/ScriptUpdater/APIUpdater.NonObsoleteApiUpdaterDetector.exe
+[api-updater (non-obsolete-error-filter)] 
+----------------------------------
+jit/startup time      : 211,4361ms
+moved types parse time: 87ms
+candidates parse time : 2ms
+C# parse time         : 330ms
+candidates check time : 66ms
+console write time    : 0ms
+
+[api-updater (non-obsolete-error-filter)] 31.01.2022 16:08:08 : Starting C:/Stellar/Programs/Unity/Editors/2020.3.26f1/Editor/Data/Tools/ScriptUpdater/APIUpdater.NonObsoleteApiUpdaterDetector.exe
+[api-updater (non-obsolete-error-filter)] 
+----------------------------------
+jit/startup time      : 119,6797ms
+moved types parse time: 79ms
+candidates parse time : 2ms
+C# parse time         : 276ms
+candidates check time : 62ms
+console write time    : 0ms
+
+[api-updater (non-obsolete-error-filter)] 31.01.2022 16:28:02 : Starting C:/Stellar/Programs/Unity/Editors/2020.3.26f1/Editor/Data/Tools/ScriptUpdater/APIUpdater.NonObsoleteApiUpdaterDetector.exe
+[api-updater (non-obsolete-error-filter)] 
+----------------------------------
+jit/startup time      : 103,7046ms
+moved types parse time: 80ms
+candidates parse time : 3ms
+C# parse time         : 322ms
+candidates check time : 65ms
+console write time    : 0ms
+
+[api-updater (non-obsolete-error-filter)] 31.01.2022 19:13:25 : Starting C:/Stellar/Programs/Unity/Editors/2020.3.26f1/Editor/Data/Tools/ScriptUpdater/APIUpdater.NonObsoleteApiUpdaterDetector.exe
+[api-updater (non-obsolete-error-filter)] 
+----------------------------------
+jit/startup time      : 119,6795ms
+moved types parse time: 78ms
+candidates parse time : 2ms
+C# parse time         : 324ms
+candidates check time : 72ms
+console write time    : 0ms
+

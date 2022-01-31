@@ -1,12 +1,30 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class GameController : MonoBehaviour
 {
     public static GameController Instance;
 
+    public UnityAction RestartAction;
+
     bool isStarted;
+
+    int score = 0;
+
+    public int Score
+    {
+        get
+        {
+            return score;
+        }
+        set
+        {
+            score = value;
+            UIController.Instance.SetScore(score);
+        }
+    }    
 
     public bool IsStarted => isStarted;
     void Awake()
@@ -27,13 +45,18 @@ public class GameController : MonoBehaviour
 
     public void RestartGame()
     {
+        RestartAction();
         isStarted = false;
-        PlatformGenerator.Instance.Reset();
-        PlayerController.Instance.Reset();
+        Score = 0;
     }
 
     public void GameOver()
     {
         UIController.Instance.GameOver();
+    }
+
+    public void AddScore(int _added_score)
+    {
+        Score = score + _added_score;
     }
 }

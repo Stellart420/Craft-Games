@@ -5,12 +5,13 @@ using UnityEngine;
 public class Platform : MonoBehaviour
 {
     Rigidbody rigidbody;
-
+    Collider collider;
     bool isActivated;
 
     void Start()
     {
         rigidbody = GetComponent<Rigidbody>();
+        collider = GetComponentInChildren<Collider>();
     }
 
     void Update()
@@ -39,7 +40,9 @@ public class Platform : MonoBehaviour
         {
             if (isActivated && rigidbody.isKinematic)
             {
+                collider.isTrigger = true;
                 rigidbody.isKinematic = false;
+
             }
         }
     }
