@@ -8,9 +8,15 @@ public class CrystalGenerator : MonoBehaviour
 
     [SerializeField] GameObject crystalPrefab;
     [SerializeField] CrystalSpawnRules spawnRules;
-
+    [SerializeField] Transform crystalContainer;
     int counter = 5;
     bool isSpawn;
+
+    delegate void SpawnDelegate(Transform pos);
+    SpawnDelegate SpawnAction;
+
+    List<GameObject> crystals = new List<GameObject>();
+
     private void Awake()
     {
         if (Instance)
@@ -23,28 +29,40 @@ public class CrystalGenerator : MonoBehaviour
 
     private void Start()
     {
+        CheckCrystalSpawnType();
         GameController.Instance.RestartAction += Reset;
         PlatformGenerator.Instance.PlatformNumberAction += SetCrystal;
     }
 
     private void Reset()
     {
+        crystals.ForEach(t => Destroy(t));
+        crystals.Clear();
         orderCounter = 5;
         counter = 5;
+        CheckCrystalSpawnType();
     }
 
-    void SetCrystal(int _number, Transform _position)
+    void SetCrystal(int _counter, Transform _position)
     {
+        //_counter дл€ проверки и создани€ кристала на дорожках шириной 3 и 2 использовать не стал 
+        // не увидел по€сн€ющего пункта в “«
+        SpawnAction(_position);
+    }
+
+    void CheckCrystalSpawnType()
+    {
+        SpawnAction = null;
         switch (spawnRules)
         {
             case CrystalSpawnRules.InOrder:
-                SpawnInOrder(_position);
+                SpawnAction += SpawnInOrder;
                 return;
             case CrystalSpawnRules.Random:
-                SpawnRandom(_position);
+                SpawnAction += SpawnRandom;
                 return;
             default:
-                SpawnRandom(_position);
+                SpawnAction += SpawnRandom;
                 return;
         }
     }
@@ -93,8 +111,10 @@ public class CrystalGenerator : MonoBehaviour
     void Spawn(Transform _position)
     {
         var crystal = Instantiate(crystalPrefab, _position.position + Vector3.up, Quaternion.identity);
-        crystal.transform.SetParent(_position);
+        crystal.transform.SetParent(crystalContainer);
+        crystal.name = $"Crystal_{_position.name}";
         isSpawn = true;
+        crystals.Add(crystal);
     }
 }
 

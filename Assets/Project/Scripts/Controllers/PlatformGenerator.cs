@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,6 +16,7 @@ public class PlatformGenerator : MonoBehaviour
     [SerializeField] Transform platformContainer;
     [SerializeField] LevelDifficult difficult;
 
+    int difficultSize = 0;
     Transform currentPlatform;
 
     int nextPlatformDirection;
@@ -24,6 +26,9 @@ public class PlatformGenerator : MonoBehaviour
     Vector3 startingPlatformScale = Vector3.one;
 
     public UnityAction<int, Transform> PlatformNumberAction;
+
+    delegate void CreatePlatformDelegate();
+    CreatePlatformDelegate create;
 
     int platformNumber = 0;
     void Awake()
@@ -39,6 +44,7 @@ public class PlatformGenerator : MonoBehaviour
 
     void Start()
     {
+        CheckDifficult();
         GameController.Instance.RestartAction += Reset;
         startingPlatformScale = startingPlatform.localScale;
         levelPlatforms.Add(startingPlatform.gameObject);
@@ -47,6 +53,7 @@ public class PlatformGenerator : MonoBehaviour
 
     public void Reset()
     {
+        CheckDifficult();
         levelPlatforms.ForEach(platform => Destroy(platform));
         levelPlatforms.Clear();
         GameObject start_platform = Instantiate(platformPrefab, Vector3.zero, Quaternion.identity, platformContainer);
@@ -67,75 +74,79 @@ public class PlatformGenerator : MonoBehaviour
 
     public void NextPlatform()
     {
-        CheckDifficult();
-        //nextPlatformDirection = Random.Range(0, 2);
-        //if (nextPlatformDirection == 0)
-        //{
-        //    currentPlatform = Instantiate(platformPrefab, currentPlatform.position + Vector3.right * 2, Quaternion.identity, platformContainer).transform;
-        //}
-        //else
-        //{
-        //    currentPlatform = Instantiate(platformPrefab, currentPlatform.position + Vector3.forward * 2, Quaternion.identity, platformContainer).transform;
-        //}
-        //currentPlatform.name = $"Platform_{platformNumber+1}";
-        //levelPlatforms.Add(currentPlatform.gameObject);
-        //platformNumber++;
+        if (create != null)
+            create();
     }
 
 
-    //todo Первый вариант
-    void CreatePlatform(int _size)
-    {
-        nextPlatformDirection = Random.Range(0, 2);
-        if (nextPlatformDirection == 0)
-        {
-            currentPlatform = Instantiate(platformPrefab, currentPlatform.position + Vector3.right * 2, Quaternion.identity, platformContainer).transform;
-            currentPlatform.localScale = currentPlatform.localScale + Vector3.forward * _size;
-        }
-        else
-        {
-            currentPlatform = Instantiate(platformPrefab, currentPlatform.position + Vector3.forward * 2, Quaternion.identity, platformContainer).transform;
-            currentPlatform.localScale = currentPlatform.localScale + Vector3.right * _size;
-
-        }
-        currentPlatform.name = $"Platform_{platformNumber + 1}_{_size}";
-        levelPlatforms.Add(currentPlatform.gameObject);
-        PlatformNumberAction(platformNumber, currentPlatform.transform);
-        platformNumber++;
-    }
-
-    //void CreatePlatform(int _count)
+    //todo Еще один вариант создания платворм
+    //void CreatePlatform(int _size)
     //{
     //    nextPlatformDirection = Random.Range(0, 2);
-    //    for (int i = _count - 1; i >= 0; i--)
+    //    if (nextPlatformDirection == 0)
     //    {
-    //        if (nextPlatformDirection == 0)
-    //        {
-    //            currentPlatform = Instantiate(platformPrefab, currentPlatform.position + Vector3.right * 2 * i + (i > 0 ? Vector3.back * 2 : Vector3.forward * 2), Quaternion.identity, platformContainer).transform;
-    //        }
-    //        else
-    //        {
-    //            currentPlatform = Instantiate(platformPrefab, currentPlatform.position + Vector3.forward * 2 * i + (i > 0 ? Vector3.left * 2 : Vector3.forward * 2), Quaternion.identity, platformContainer).transform;
-    //        }
-    //        currentPlatform.name = $"Platform_{platformNumber + 1}_{i}";
-    //        levelPlatforms.Add(currentPlatform.gameObject);
+    //        currentPlatform = Instantiate(platformPrefab, currentPlatform.position + Vector3.right * 2, Quaternion.identity, platformContainer).transform;
+    //        currentPlatform.localScale = currentPlatform.localScale + Vector3.forward * _size;
     //    }
+    //    else
+    //    {
+    //        currentPlatform = Instantiate(platformPrefab, currentPlatform.position + Vector3.forward * 2, Quaternion.identity, platformContainer).transform;
+    //        currentPlatform.localScale = currentPlatform.localScale + Vector3.right * _size;
+
+    //    }
+    //    currentPlatform.name = $"Platform_{platformNumber + 1}_{_size}";
+    //    levelPlatforms.Add(currentPlatform.gameObject);
     //    PlatformNumberAction(platformNumber, currentPlatform.transform);
     //    platformNumber++;
     //}
 
+    void CreatePlatform()
+    {
+        nextPlatformDirection = UnityEngine.Random.Range(0, 2);
+        if (nextPlatformDirection == 0)
+        {
+            currentPlatform = Instantiate(platformPrefab, currentPlatform.position + Vector3.right * 2, Quaternion.identity, platformContainer).transform;
+        }
+        else
+        {
+            currentPlatform = Instantiate(platformPrefab, currentPlatform.position + Vector3.forward * 2, Quaternion.identity, platformContainer).transform;
+        }
+        currentPlatform.name = $"Platform_{platformNumber + 1}_0";
+        levelPlatforms.Add(currentPlatform.gameObject);
+        GameObject platform;
+        for (int i = difficultSize; i > 0; i--)
+        {
+            if (nextPlatformDirection == 0)
+            {
+                platform = Instantiate(platformPrefab, currentPlatform.position + Vector3.back * 2 * i, Quaternion.identity, platformContainer);
+            }
+            else
+            {
+                platform = Instantiate(platformPrefab, currentPlatform.position + Vector3.left * 2 * i, Quaternion.identity, platformContainer);
+            }
+            platform.name = $"Platform_{platformNumber + 1}_{i}";
+            levelPlatforms.Add(platform);
+        }
+        PlatformNumberAction(levelPlatforms.Count, currentPlatform.transform);
+        platformNumber++;
+    }
+
     void CheckDifficult()
     {
+        create = null;
         switch (difficult)
         {
             case LevelDifficult.Easy:
-                CreatePlatform(2);
+                difficultSize = 2;
+                create += CreatePlatform;
                 return;
             case LevelDifficult.Normal:
-                CreatePlatform(1);
+                difficultSize = 1;
+                create += CreatePlatform;
                 return;
             case LevelDifficult.Hard:
-                CreatePlatform(0);
+                difficultSize = 0;
+                create += CreatePlatform;
                 return;
             default:return;
         }
