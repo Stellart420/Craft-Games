@@ -4,19 +4,8 @@ using UnityEngine;
 
 public class CrystalGenerator : MonoBehaviour
 {
+    #region Singleton
     public static CrystalGenerator Instance;
-
-    [SerializeField] GameObject crystalPrefab;
-    [SerializeField] CrystalSpawnRules spawnRules;
-    [SerializeField] Transform crystalContainer;
-    int counter = 5;
-    bool isSpawn;
-
-    delegate void SpawnDelegate(Transform pos);
-    SpawnDelegate SpawnAction;
-
-    List<GameObject> crystals = new List<GameObject>();
-
     private void Awake()
     {
         if (Instance)
@@ -26,9 +15,27 @@ public class CrystalGenerator : MonoBehaviour
         }
         Instance = this;
     }
+    #endregion
+
+    [SerializeField] string poolTag = "Crystal";
+    [SerializeField] GameObject crystalPrefab;
+    [SerializeField] CrystalSpawnRules spawnRules;
+    [SerializeField] Transform crystalContainer;
+    int counter = 5;
+    bool isSpawn;
+
+    delegate void SpawnDelegate(Transform pos);
+    SpawnDelegate SpawnAction;
+
+    List<Crystal> crystals = new List<Crystal>();
+
+    ObjectPool objectPooler;
+
 
     private void Start()
     {
+        objectPooler = ObjectPool.Instance;
+
         CheckCrystalSpawnType();
         GameController.Instance.RestartAction += Reset;
         PlatformGenerator.Instance.PlatformNumberAction += SetCrystal;
@@ -36,7 +43,7 @@ public class CrystalGenerator : MonoBehaviour
 
     private void Reset()
     {
-        crystals.ForEach(t => Destroy(t));
+        crystals.ForEach(crystal => crystal.Reset());
         crystals.Clear();
         orderCounter = 5;
         counter = 5;
@@ -110,9 +117,8 @@ public class CrystalGenerator : MonoBehaviour
 
     void Spawn(Transform _position)
     {
-        var crystal = Instantiate(crystalPrefab, _position.position + Vector3.up, Quaternion.identity);
-        crystal.transform.SetParent(crystalContainer);
-        crystal.name = $"Crystal_{_position.name}";
+        var crystal = objectPooler.SpawnFromPool(poolTag, _position.position + Vector3.up, Quaternion.identity, crystalContainer).GetComponent<Crystal>();
+        crystal.Init(() => GameController.Instance.AddScore(1));
         isSpawn = true;
         crystals.Add(crystal);
     }

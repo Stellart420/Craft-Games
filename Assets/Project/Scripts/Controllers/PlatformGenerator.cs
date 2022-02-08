@@ -1,36 +1,11 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
 public class PlatformGenerator : MonoBehaviour
 {
+    #region Singleton
     public static PlatformGenerator Instance;
-
-    [SerializeField] GameObject platformPrefab;
-    [SerializeField] Transform startingPoint;
-    [SerializeField] Transform startingPlatform;
-    [SerializeField] int startingPlatformCount;
-
-    [SerializeField] Transform platformContainer;
-    [SerializeField] LevelDifficult difficult;
-
-    int difficultSize = 0;
-    Transform currentPlatform;
-
-    int nextPlatformDirection;
-
-    List<GameObject> levelPlatforms = new List<GameObject>();
-
-    Vector3 startingPlatformScale = Vector3.one;
-
-    public UnityAction<int, Transform> PlatformNumberAction;
-
-    delegate void CreatePlatformDelegate();
-    CreatePlatformDelegate create;
-
-    int platformNumber = 0;
     void Awake()
     {
         if (Instance)
@@ -41,31 +16,61 @@ public class PlatformGenerator : MonoBehaviour
 
         Instance = this;
     }
+    #endregion
+
+    [SerializeField] int startingPlatformCount = 50;
+    [SerializeField] Transform startPoint;
+    [SerializeField] Transform startPlatform;
+    [SerializeField] string poolTag = "Platform";
+    [SerializeField] Transform platformContainer;
+
+    int difficultSize = 0;
+    Transform lastPlatform;
+    Platform currentPlatform;
+
+    int nextPlatformDirection;
+
+    List<Platform> levelPlatforms = new List<Platform>();
+
+    Vector3 startingPlatformScale = Vector3.one;
+
+    ObjectPool objectPooler;
+    GameController gameController;
+    public UnityAction<int, Transform> PlatformNumberAction;
+
+    delegate void CreatePlatformDelegate();
+    CreatePlatformDelegate create;
+
+    int platformNumber = 0;
 
     void Start()
     {
+        objectPooler = ObjectPool.Instance;
+        gameController = GameController.Instance;
         CheckDifficult();
         GameController.Instance.RestartAction += Reset;
-        startingPlatformScale = startingPlatform.localScale;
-        levelPlatforms.Add(startingPlatform.gameObject);
+        startingPlatformScale = startPlatform.transform.localScale;
+        var platform = startPlatform.GetComponent<Platform>();
+        platform.Init(() => NextPlatform());
+        levelPlatforms.Add(platform);
         GenerateStartingPlatform();
     }
 
     public void Reset()
     {
         CheckDifficult();
-        levelPlatforms.ForEach(platform => Destroy(platform));
+        levelPlatforms.ForEach(platform => platform.Reset());
         levelPlatforms.Clear();
-        GameObject start_platform = Instantiate(platformPrefab, Vector3.zero, Quaternion.identity, platformContainer);
-        start_platform.transform.localScale = startingPlatformScale;
-        levelPlatforms.Add(start_platform);
+        GameObject start_GO = objectPooler.SpawnFromPool(poolTag, platformContainer);
+        start_GO.transform.localScale = startingPlatformScale;
+        levelPlatforms.Add(start_GO.GetComponent<Platform>());
         platformNumber = 0;
         GenerateStartingPlatform();
     }
 
     void GenerateStartingPlatform()
     {
-        currentPlatform = startingPoint;
+        lastPlatform = startPoint;
         for (int i = 0; i < startingPlatformCount; i++)
         {
             NextPlatform();
@@ -103,30 +108,37 @@ public class PlatformGenerator : MonoBehaviour
     void CreatePlatform()
     {
         nextPlatformDirection = UnityEngine.Random.Range(0, 2);
+        GameObject platform_GO;
+
         if (nextPlatformDirection == 0)
         {
-            currentPlatform = Instantiate(platformPrefab, currentPlatform.position + Vector3.right * 2, Quaternion.identity, platformContainer).transform;
+            platform_GO = objectPooler.SpawnFromPool(poolTag, lastPlatform.position + Vector3.right * 2, Quaternion.identity, platformContainer);
+            currentPlatform = platform_GO.GetComponent<Platform>();
         }
         else
         {
-            currentPlatform = Instantiate(platformPrefab, currentPlatform.position + Vector3.forward * 2, Quaternion.identity, platformContainer).transform;
+            platform_GO = objectPooler.SpawnFromPool(poolTag, lastPlatform.position + Vector3.forward * 2, Quaternion.identity, platformContainer);
+            currentPlatform = platform_GO.GetComponent<Platform>();
         }
-        currentPlatform.name = $"Platform_{platformNumber + 1}_0";
-        levelPlatforms.Add(currentPlatform.gameObject);
-        GameObject platform;
+
+        lastPlatform = platform_GO.transform;
+        currentPlatform.Init(NextPlatform);
+        levelPlatforms.Add(currentPlatform);
+
+        GameObject platform_GO_sup;
         for (int i = difficultSize; i > 0; i--)
         {
             if (nextPlatformDirection == 0)
             {
-                platform = Instantiate(platformPrefab, currentPlatform.position + Vector3.back * 2 * i, Quaternion.identity, platformContainer);
+                platform_GO_sup = objectPooler.SpawnFromPool(poolTag, currentPlatform.transform.position + Vector3.back * 2 * i, Quaternion.identity, platformContainer);
             }
             else
             {
-                platform = Instantiate(platformPrefab, currentPlatform.position + Vector3.left * 2 * i, Quaternion.identity, platformContainer);
+                platform_GO_sup = objectPooler.SpawnFromPool(poolTag, currentPlatform.transform.position + Vector3.left * 2 * i, Quaternion.identity, platformContainer);
             }
-            platform.name = $"Platform_{platformNumber + 1}_{i}";
-            levelPlatforms.Add(platform);
+            levelPlatforms.Add(platform_GO_sup.GetComponent<Platform>());
         }
+
         PlatformNumberAction(levelPlatforms.Count, currentPlatform.transform);
         platformNumber++;
     }
@@ -134,7 +146,7 @@ public class PlatformGenerator : MonoBehaviour
     void CheckDifficult()
     {
         create = null;
-        switch (difficult)
+        switch (gameController.Difficult)
         {
             case LevelDifficult.Easy:
                 difficultSize = 2;
@@ -148,14 +160,7 @@ public class PlatformGenerator : MonoBehaviour
                 difficultSize = 0;
                 create += CreatePlatform;
                 return;
-            default:return;
+            default: return;
         }
     }
-}
-
-public enum LevelDifficult
-{
-    Easy,
-    Normal,
-    Hard,
 }

@@ -1,24 +1,54 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
-public class Platform : MonoBehaviour
+public class Platform : MonoBehaviour, IPooledObject
 {
-    Rigidbody rigidbody;
-    Collider collider;
+    Rigidbody rb;
+    Collider col;
     bool isActivated;
+
+    public UnityAction EnterOnActiveAction;
 
     void Start()
     {
-        rigidbody = GetComponent<Rigidbody>();
-        collider = GetComponentInChildren<Collider>();
+        if (rb == null)
+            rb = GetComponent<Rigidbody>();
+
+        if (col == null)
+            col = GetComponentInChildren<Collider>();
+    }
+
+    public void Init(string _name, UnityAction enter_on_active_action)
+    {
+        name = _name;
+        EnterOnActiveAction += () => enter_on_active_action();
+    }
+    public void Init(Vector3 _pos)
+    {
+        transform.position = _pos;
+    }
+
+    public void Init(UnityAction enter_on_active_action)
+    {
+        EnterOnActiveAction += () => enter_on_active_action();
+    }
+
+    public void Reset()
+    {
+        isActivated = false;
+        EnterOnActiveAction = null;
+        gameObject.SetActive(false);
     }
 
     void Update()
     {
-        if (transform.position.y < -10f)
+        if (transform.position.y < Constants.deathZone)
         {
-            Destroy(gameObject);
+            isActivated = false;
+            EnterOnActiveAction = null;
+            gameObject.SetActive(false);
         }
     }
 
@@ -28,7 +58,7 @@ public class Platform : MonoBehaviour
         {
             if (!isActivated)
             {
-                PlatformGenerator.Instance.NextPlatform();
+                EnterOnActiveAction?.Invoke();
                 isActivated = true;
             }
         }
@@ -38,12 +68,24 @@ public class Platform : MonoBehaviour
     {
         if (collision.transform.tag == "Player")
         {
-            if (isActivated && rigidbody.isKinematic)
+            if (isActivated && rb.isKinematic)
             {
-                collider.isTrigger = true;
-                rigidbody.isKinematic = false;
+                col.isTrigger = true;
+                rb.isKinematic = false;
 
             }
         }
+    }
+
+    public void OnObjectSpawn()
+    {
+        if (rb == null)
+            rb = GetComponent<Rigidbody>();
+
+        if (col == null)
+            col = GetComponentInChildren<Collider>();
+
+        rb.isKinematic = true;
+        col.isTrigger = false;
     }
 }

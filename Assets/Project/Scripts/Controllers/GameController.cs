@@ -5,7 +5,23 @@ using UnityEngine.Events;
 
 public class GameController : MonoBehaviour
 {
+    #region Singleton
     public static GameController Instance;
+    void Awake()
+    {
+        if (Instance)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+    }
+    #endregion
+
+    [SerializeField] LevelDifficult difficult = LevelDifficult.Easy;
+
+    public LevelDifficult Difficult => difficult;
 
     public UnityAction RestartAction;
 
@@ -27,16 +43,7 @@ public class GameController : MonoBehaviour
     }    
 
     public bool IsStarted => isStarted;
-    void Awake()
-    {
-        if (Instance)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
-        Instance = this;
-    }
+   
 
     public void StartGame()
     {
@@ -59,4 +66,10 @@ public class GameController : MonoBehaviour
     {
         Score = score + _added_score;
     }
+}
+public enum LevelDifficult
+{
+    Easy,
+    Normal,
+    Hard,
 }
